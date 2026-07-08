@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PayOps | Контроль оплат</title>
+  <link rel="icon" href="assets/payops-icon.svg?v=20260708-brand2" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/payops-icon.svg?v=20260708-brand2" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="is-logged-out">
+  <section id="loginScreen" class="login-screen">
+    <form id="loginForm" class="login-card">
+      <div class="brand login-brand">
+        <div class="brand-mark">P</div>
+        <div>
+          <strong>PayOps</strong>
+          <span>Вхід у контроль оплат</span>
+        </div>
+      </div>
+      <div>
+        <p class="eyebrow">Secure workspace</p>
+        <h1>Увійдіть за ніком і паролем</h1>
+        <p>Доступ до оплат, історії та ролей відкривається відповідно до прав користувача.</p>
+      </div>
+      <label>Нік користувача<input id="loginUsername" autocomplete="username" required placeholder="superadmin" /></label>
+      <label>Пароль<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••" /></label>
+      <button class="btn primary">Увійти</button>
+      <div class="login-help">
+        <b>Демо-доступи:</b>
+        <span>superadmin / 1234</span>
+        <span>admin / 1234</span>
+        <span>viewer / 1234</span>
+      </div>
+    </form>
+  </section>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">P</div>
+        <div>
+          <strong>PayOps</strong>
+          <span>Service payments</span>
+        </div>
+      </div>
+
+      <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Згорнути меню" aria-expanded="true"></button>
+
+      <nav class="side-nav" aria-label="Навігація">
+        <button class="nav-item active" data-page="overview">Огляд</button>
+        <button class="nav-item" data-page="services">Сервіси</button>
+        <button class="nav-item" data-page="attention">Потребує уваги</button>
+        <button class="nav-item" data-page="calendar">Календар</button>
+        <button class="nav-item" data-page="history">Історія</button>
+        <button class="nav-item" data-page="timeline">Timeline</button>
+        <button class="nav-item" data-page="archive">Архів</button>
+        <button class="nav-item" data-page="access">Доступи</button>
+        <button class="nav-item" data-page="analytics">Analytics</button>
+        <button class="nav-item" data-page="notifications">Notifications</button>
+        <button class="nav-item" data-page="documents">Documents</button>
+        <button class="nav-item" data-page="settings">Settings</button>
+      </nav>
+
+      <div class="role-card">
+        <span>Поточна роль</span>
+        <strong id="sidebarRole">Суперадмін</strong>
+        <small id="roleHint">Повний доступ до системи</small>
+      </div>
+
+      <div class="sidebar-card">
+        <p>Критичні оплати</p>
+        <strong id="sidebarHot">0</strong>
+        <span>прострочені, без дати або до 3 днів</span>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Operations control</p>
+          <h1 id="pageTitle">Доброго дня 👋</h1>
+          <p id="pageSubtitle">Ось що відбувається з оплатами сервісів.</p>
+        </div>
+        <div class="top-actions">
+          <div class="user-chip">
+            <span id="currentUserName">Користувач</span>
+            <b id="currentUserRole">Роль</b>
+          </div>
+          <button id="logoutBtn" class="btn soft">Вийти</button>
+          <button id="refreshBtn" class="btn soft">Оновити дані</button>
+          <button id="importBtn" class="btn soft quiet-action" data-permission="import">Імпорт</button>
+          <input id="importFile" type="file" accept="application/json" hidden />
+          <button id="exportBtn" class="btn soft quiet-action" data-permission="export">Експорт</button>
+          <button id="csvBtn" class="btn soft quiet-action" data-permission="export">CSV</button>
+          <button id="addBtn" class="btn primary" data-permission="write">+ Додати сервіс</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="finance-hero">
+          <div class="hero-health">
+            <p class="eyebrow">Загальний стан оплат</p>
+            <h2>Payment Health</h2>
+            <div class="health-content">
+              <div class="health-ring" id="healthRing" style="--health: 87">
+                <span id="healthValue">87%</span>
+                <small>Добрий стан</small>
+              </div>
+              <div class="health-copy">
+                <p id="healthText">Більшість сервісів оплачуються вчасно. Є лише кілька оплат, які потребують уваги.</p>
+                <button class="btn primary small" data-jump="attention">Переглянути деталі →</button>
+              </div>
+            </div>
+          </div>
+          <div id="stats" class="stats-grid hero-stats"></div>
+        </section>
+
+        <section class="filters-panel">
+          <div class="search-box">
+            <span>Пошук</span>
+            <input id="searchInput" type="search" placeholder="ФОП, сервіс, провайдер, ключ, нотатка..." />
+          </div>
+          <select id="statusFilter">
+            <option value="all">Усі статуси</option>
+            <option value="overdue">Прострочені</option>
+            <option value="danger">0-3 дні</option>
+            <option value="warning">4-7 днів</option>
+            <option value="soon">8-14 днів</option>
+            <option value="ok">Ок</option>
+            <option value="empty">Без дати</option>
+          </select>
+          <select id="typeFilter">
+            <option value="all">Усі типи</option>
+            <option>РРО</option>
+            <option>ПРРО</option>
+            <option>Інтернет</option>
+            <option>Домени</option>
+            <option>Сервера</option>
+            <option>VPN</option>
+            <option>Телефонія</option>
+            <option>Email</option>
+            <option>Ліцензії</option>
+            <option>Microsoft</option>
+            <option>Google</option>
+            <option>SSL</option>
+            <option>POS</option>
+            <option>Хмара</option>
+            <option>CRM</option>
+            <option>Антивірус</option>
+            <option>ВЧАСНО</option>
+            <option>Інше</option>
+          </select>
+          <select id="ownerFilter"><option value="all">Усі відповідальні</option></select>
+          <select id="sortMode">
+            <option value="dateAsc">Найближчі зверху</option>
+            <option value="ownerAsc">ФОП А-Я</option>
+            <option value="typeAsc">Тип А-Я</option>
+          </select>
+        </section>
+
+        <section id="overview" class="page active">
+          <div class="grid-layout">
+            <section class="panel xl">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Upcoming payments</p>
+                  <h2>Найближчі оплати</h2>
+                </div>
+                <button class="btn soft small" data-jump="services">Усі сервіси</button>
+              </div>
+              <div id="overviewGroups"></div>
+            </section>
+            <aside class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Today</p>
+                  <h2>Віджет “Сьогодні”</h2>
+                </div>
+              </div>
+              <div id="todayList" class="priority-list"></div>
+              <hr class="soft-divider" />
+              <div class="panel-head compact">
+                <div>
+                  <p class="eyebrow">Calendar</p>
+                  <h2>Календар оплат</h2>
+                </div>
+              </div>
+              <div id="miniCalendar" class="priority-list"></div>
+              <hr class="soft-divider" />
+              <div class="panel-head compact">
+                <div>
+                  <p class="eyebrow">Critical</p>
+                  <h2>Критичні платежі</h2>
+                </div>
+              </div>
+              <div id="priorityList" class="priority-list"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="services" class="page">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Registry</p>
+                <h2>Реєстр сервісів</h2>
+              </div>
+              <button class="btn primary small" id="addBtn2" data-permission="write">+ Додати</button>
+            </div>
+            <div class="bulk-bar" data-permission="write">
+              <label><input id="selectAllServices" type="checkbox" /> Обрати всі</label>
+              <select id="bulkResponsible"><option value="">Оновити відповідального</option></select>
+              <input id="bulkTag" placeholder="Додати тег" />
+              <button id="bulkApplyBtn" class="btn soft small">Застосувати</button>
+              <button id="bulkArchiveBtn" class="btn danger small">В архів</button>
+            </div>
+            <div id="serviceTable" class="data-table"></div>
+          </div>
+        </section>
+
+        <section id="attention" class="page">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Exception list</p>
+                <h2>Потребує уваги</h2>
+                <p>Усе прострочене, без дати або з оплатою до 14 днів.</p>
+              </div>
+            </div>
+            <div id="attentionList" class="attention-list"></div>
+          </div>
+        </section>
+
+        <section id="calendar" class="page">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Timeline</p>
+                <h2>Календар оплат</h2>
+                <p>Оплати згруповані по місяцях для планування навантаження.</p>
+              </div>
+            </div>
+            <div id="calendarList" class="calendar-list"></div>
+          </div>
+        </section>
+
+        <section id="history" class="page">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Audit trail</p>
+                <h2>Історія оплат і BP-посилань</h2>
+              </div>
+              <button id="clearHistoryBtn" class="btn danger small" data-permission="superadmin">Очистити</button>
+            </div>
+            <div class="search-box history-search">
+              <span>Пошук</span>
+              <input id="historySearch" type="search" placeholder="Автор, BP, коментар, сервіс..." />
+            </div>
+            <div id="historyList" class="history-list"></div>
+          </div>
+        </section>
+
+        <section id="timeline" class="page">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Long view</p>
+                <h2>Timeline оплат</h2>
+                <p>Історія платежів по роках, щоб бачити 2023, 2024, 2025, 2026 і далі.</p>
+              </div>
+            </div>
+            <div id="timelineList" class="timeline-list"></div>
+          </div>
+        </section>
+
+        <section id="archive" class="page">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Archive</p>
+                <h2>Архів сервісів</h2>
+                <p>Закриті сервіси не видаляються, а переносяться сюди.</p>
+              </div>
+            </div>
+            <div id="archiveList" class="attention-list"></div>
+          </div>
+        </section>
+
+        <section id="access" class="page">
+          <div class="access-grid">
+            <article class="panel">
+              <p class="eyebrow">Access model</p>
+              <h2>Права ролей</h2>
+              <div class="rights-list">
+                <div><b>Суперадмін</b><span>усі дії, імпорт, видалення, очищення історії, створення користувачів і видача ролей</span></div>
+                <div><b>Адмін</b><span>додавання, редагування, оновлення оплат, експорт без зміни ролей</span></div>
+                <div><b>Перегляд</b><span>тільки перегляд дашборда, календаря та історії без зміни даних</span></div>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Users</p>
+                  <h2>Користувачі</h2>
+                </div>
+              </div>
+              <div id="usersList" class="users-list"></div>
+              <form id="userForm" class="user-form" data-permission="manageUsers">
+                <input id="userName" placeholder="Ім'я користувача" required />
+                <input id="userUsername" placeholder="Нік" required />
+                <input id="userPassword" type="password" placeholder="Пароль" required />
+                <select id="userRole">
+                  <option value="admin">Адмін</option>
+                  <option value="pm">PM</option>
+                  <option value="accountant">Бухгалтер</option>
+                  <option value="viewer">Viewer</option>
+                  <option value="superadmin">Суперадмін</option>
+                </select>
+                <button class="btn primary">Додати</button>
+              </form>
+            </article>
+            <article class="panel">
+              <p class="eyebrow">Data</p>
+              <h2>Локальне збереження</h2>
+              <p>У цій версії користувачі, ніки й паролі зберігаються локально у браузері. Для бойового режиму потрібен сервер, база даних і шифрування паролів.</p>
+              <button id="seedBtn" class="btn danger" data-permission="superadmin">Скинути на демо-дані</button>
+            </article>
+            <article class="panel">
+              <p class="eyebrow">Budget limits</p>
+              <h2>Ліміти по категоріях</h2>
+              <p>Ліміти допомагають бачити, де планові оплати на найближчі 30 днів наближаються до бюджету.</p>
+              <form id="limitForm" class="limit-form" data-permission="write">
+                <select id="limitCategory">
+                  <option>РРО</option>
+                  <option>ПРРО</option>
+                  <option>Інтернет</option>
+                  <option>Домени</option>
+                  <option>Сервера</option>
+                  <option>ВЧАСНО</option>
+                  <option>Інше</option>
+                </select>
+                <input id="limitAmount" type="number" min="0" step="100" placeholder="Ліміт, грн" required />
+                <button class="btn primary">Зберегти ліміт</button>
+              </form>
+              <div id="limitsList" class="limits-list"></div>
+            </article>
+          </div>
+        </section>
+        <section id="analytics" class="page">
+          <div id="analyticsContent" class="analytics-layout"></div>
+        </section>
+
+        <section id="notifications" class="page">
+          <div id="notificationsContent" class="settings-grid"></div>
+        </section>
+
+        <section id="documents" class="page">
+          <div class="panel document-workspace">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Files</p>
+                <h2>Documents hub</h2>
+                <p>Invoices, acts, contracts, screenshots and payment proofs grouped by service.</p>
+              </div>
+              <button class="btn soft small">Upload</button>
+            </div>
+            <div id="documentsContent"></div>
+          </div>
+        </section>
+
+        <section id="settings" class="page">
+          <div class="settings-grid">
+            <article class="panel setting-card"><p class="eyebrow">General</p><h2>Workspace</h2><p>Company, language, currency and default category settings.</p></article>
+            <article class="panel setting-card"><p class="eyebrow">Payments</p><h2>Automation</h2><p>Default schedules, next-date rules and business process fields.</p></article>
+            <article class="panel setting-card"><p class="eyebrow">Security</p><h2>Access control</h2><p>Roles, sessions and permissions managed by superadmin.</p></article>
+            <article class="panel setting-card"><p class="eyebrow">Integrations</p><h2>Connected apps</h2><p>Email, Telegram, Slack, Teams, Jira, SharePoint and Confluence.</p></article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="serviceDialog" class="modal">
+    <form id="serviceForm" method="dialog">
+      <div class="modal-head">
+        <h2 id="serviceModalTitle">Сервіс</h2>
+        <button type="button" class="icon-btn" data-close>×</button>
+      </div>
+      <input type="hidden" id="serviceId" />
+      <div class="form-grid">
+        <label>ФОП / компанія<input id="owner" required /></label>
+        <label>Назва сервісу<input id="serviceName" required /></label>
+        <label>Категорія оплати<select id="serviceType"><option>Інтернет</option><option>РРО</option><option>ПРРО</option><option>Домени</option><option>Сервера</option><option>VPN</option><option>Телефонія</option><option>Email</option><option>Ліцензії</option><option>Microsoft</option><option>Google</option><option>SSL</option><option>POS</option><option>Хмара</option><option>CRM</option><option>Антивірус</option><option>ВЧАСНО</option><option>Інше</option></select></label>
+        <label>Провайдер / кабінет<input id="provider" /></label>
+        <label>Посилання на кабінет<input id="cabinetLink" type="url" placeholder="https://..." /></label>
+        <label>Логін<input id="serviceLogin" /></label>
+        <label>Контакт<input id="contact" /></label>
+        <label>Країна<input id="country" placeholder="Україна" /></label>
+        <label class="wide">Ключ / логін / ID<textarea id="identifier" rows="2"></textarea></label>
+        <label class="wide">Опис<textarea id="description" rows="2"></textarea></label>
+        <label>Сплачено до<input id="paidUntil" type="date" /></label>
+        <label>Планова сума, грн<input id="plannedAmount" type="number" min="0" step="0.01" /></label>
+        <label>Валюта<select id="currency"><option>UAH</option><option>USD</option><option>EUR</option><option>GBP</option></select></label>
+        <label>Курс<input id="exchangeRate" type="number" min="0" step="0.0001" value="1" /></label>
+        <label>ПДВ, %<input id="vat" type="number" min="0" step="0.01" value="0" /></label>
+        <label>PM<input id="pm" /></label>
+        <label>Бухгалтер<input id="accountant" /></label>
+        <label>Керівник<input id="manager" /></label>
+        <label>Теги<input id="tags" placeholder="магазин, критично" /></label>
+        <label>Нагадування<input id="reminders" placeholder="30,14,7,3,1" /></label>
+        <label>Графік<select id="scheduleType"><option value="monthly">Щомісяця</option><option value="bimonthly">Раз у два місяці</option><option value="quarterly">Раз у три місяці</option><option value="semiannual">Раз у шість місяців</option><option value="yearly">Раз на рік</option><option value="weeks">Кожні N тижнів</option><option value="days">Кожні N днів</option><option value="lastDay">Останній день місяця</option><option value="firstMonday">Перший понеділок</option><option value="once">Разово</option><option value="custom">Власний графік</option><option value="manual">Вручну</option></select></label>
+        <label>N днів<input id="intervalDays" type="number" min="1" value="30" /></label>
+        <label>Cron-like<input id="cronRule" placeholder="0 9 1 * *" /></label>
+        <label class="wide">Нотатки<textarea id="notes" rows="3"></textarea></label>
+      </div>
+      <menu>
+        <button type="button" class="btn soft" data-close>Скасувати</button>
+        <button class="btn primary">Зберегти</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="paymentDialog" class="modal">
+    <form id="paymentForm" method="dialog">
+      <div class="modal-head">
+        <h2>Оновити дані оплати</h2>
+        <button type="button" class="icon-btn" data-close>×</button>
+      </div>
+      <input type="hidden" id="paymentServiceId" />
+      <p id="paymentServiceLabel" class="muted"></p>
+      <div class="payment-helper">
+        <button type="button" id="calcNextBtn" class="btn soft small">Розрахувати за графіком</button>
+        <span id="calcHint"></span>
+      </div>
+      <div class="form-grid">
+        <label>Нова дата "сплачено до"<input id="newPaidUntil" type="date" required /></label>
+        <label>Сума, грн<input id="amount" type="number" min="0" step="0.01" /></label>
+        <label>Автор<input id="author" required placeholder="Хто вніс зміну" /></label>
+        <label>Посилання на бізнес-процес<input id="bpLink" type="url" placeholder="https://..." /></label>
+        <label>Рахунок / PDF / скрін<input id="docLink" type="url" placeholder="https://..." /></label>
+        <label>Договір / акт<input id="contractLink" type="url" placeholder="https://..." /></label>
+        <label class="wide">Коментар<textarea id="comment" rows="3"></textarea></label>
+      </div>
+      <menu>
+        <button type="button" class="btn soft" data-close>Скасувати</button>
+        <button class="btn primary">Оновити дані</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="serviceDetailDialog" class="modal wide-modal">
+    <div class="detail-shell">
+      <div class="modal-head">
+        <h2 id="detailTitle">Картка сервісу</h2>
+        <button type="button" class="icon-btn" data-close>×</button>
+      </div>
+      <div id="serviceDetailContent"></div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>

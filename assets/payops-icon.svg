@@ -1,0 +1,71 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="112" y1="88" x2="418" y2="432" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C9A8FF"/>
+      <stop offset="0.42" stop-color="#6EA6FF"/>
+      <stop offset="0.72" stop-color="#8A7CFF"/>
+      <stop offset="1" stop-color="#FFD2EA"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="176" y1="134" x2="304" y2="268" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEF2FF"/>
+    </linearGradient>
+    <linearGradient id="check" x1="326" y1="278" x2="422" y2="388" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD8F0"/>
+      <stop offset="1" stop-color="#F78BD5"/>
+    </linearGradient>
+    <linearGradient id="line" x1="94" y1="360" x2="386" y2="276" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="0.5" stop-color="#EAF0FF"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <filter id="cardShadow" x="42" y="42" width="428" height="428" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="28" flood-color="#5E6BDB" flood-opacity=".20"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#FFFFFF" flood-opacity=".60"/>
+    </filter>
+    <filter id="soft" x="126" y="96" width="306" height="324" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#5B6DFF" flood-opacity=".22"/>
+    </filter>
+    <filter id="checkShadow" x="284" y="246" width="170" height="170" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#EF74C5" flood-opacity=".30"/>
+    </filter>
+    <clipPath id="clip">
+      <rect x="86" y="78" width="340" height="356" rx="86"/>
+    </clipPath>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="#F7F9FF"/>
+  <g filter="url(#cardShadow)">
+    <rect x="86" y="78" width="340" height="356" rx="86" fill="url(#bg)"/>
+    <rect x="86" y="78" width="340" height="356" rx="86" fill="white" opacity=".06"/>
+    <g clip-path="url(#clip)">
+      <circle cx="358" cy="96" r="142" fill="#FFFFFF" opacity=".18"/>
+      <circle cx="416" cy="378" r="156" fill="#FFD7EA" opacity=".42"/>
+      <circle cx="122" cy="414" r="106" fill="#4A9BFF" opacity=".34"/>
+    </g>
+  </g>
+
+  <g filter="url(#soft)">
+    <path d="M166 170C166 149.013 183.013 132 204 132H284C345.856 132 386 171.225 386 226C386 280.775 345.856 320 284 320H238V360C238 380.987 220.987 398 200 398H166V170Z" fill="white" opacity=".97"/>
+    <path d="M220 188H278C310.943 188 328 202.081 328 226C328 249.919 310.943 264 278 264H220V188Z" fill="url(#paper)"/>
+    <path d="M220 264H278C310.943 264 328 249.919 328 226C328 249.919 310.943 264 278 264H220V320H166V264H220Z" fill="#C9D5FF" opacity=".72"/>
+    <path d="M204 174V294L224 276" stroke="#8D84FF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity=".88"/>
+    <path d="M248 208H290" stroke="#9A91FF" stroke-width="7" stroke-linecap="round" opacity=".72"/>
+    <path d="M248 236H298" stroke="#9A91FF" stroke-width="7" stroke-linecap="round" opacity=".42"/>
+    <path d="M286 168V210H328" fill="#8A7CFF" opacity=".86"/>
+  </g>
+
+  <path d="M90 366L142 322L190 338L248 286L314 304L370 248" stroke="url(#line)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="90" cy="366" r="15" fill="white"/>
+  <circle cx="142" cy="322" r="15" fill="white"/>
+  <circle cx="190" cy="338" r="15" fill="white"/>
+  <circle cx="248" cy="286" r="15" fill="white"/>
+  <circle cx="314" cy="304" r="13" fill="white"/>
+  <circle cx="370" cy="248" r="15" fill="white"/>
+
+  <g filter="url(#checkShadow)">
+    <circle cx="356" cy="332" r="58" fill="url(#check)"/>
+    <circle cx="356" cy="332" r="58" fill="white" opacity=".10"/>
+    <path d="M329 330L348 350L386 309" stroke="white" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
