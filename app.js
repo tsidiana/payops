@@ -89,7 +89,13 @@ users = users.map(user => ({
   role: roleMeta[user.role] ? user.role : 'viewer'
 }));
 
-services = services.map(service => ({ notes: '', schedule: 'monthly', intervalDays: 30, plannedAmount: 0, currency: 'UAH', exchangeRate: 1, vat: 0, reminders: '30,14,7,3,1', tags: '', archived: false, ...service, type: normalizeCategory(service.type) }));
+services = services.map(service => {
+  const normalized = { notes: '', schedule: 'monthly', intervalDays: 30, plannedAmount: 0, currency: 'UAH', exchangeRate: 1, vat: 0, reminders: '30,14,7,3,1', tags: '', archived: false, ...service };
+  normalized.type = normalizeCategory(normalized.type);
+  normalized.keys = normalizeKeys(normalized);
+  normalized.identifier = normalized.identifier || normalized.keys.map(key => key.value).filter(Boolean).join(', ');
+  return normalized;
+});
 let currentUser = users.find(user => user.username === localStorage.getItem(SESSION_KEY)) || null;
 let selectedServiceCategory = '';
 let selectedServiceProvider = '';
@@ -135,6 +141,40 @@ function statusOf(date) {
   return ['ok', `${days} дн.`, 'Все ок'];
 }
 
+function canViewSecrets() {
+  return ['superadmin', 'admin'].includes(currentUser?.role);
+}
+
+function keyRowsFromIdentifier(value, expiresAt = '') {
+  return String(value || '')
+    .split(/[,;\n]+/)
+    .map(item => item.trim())
+    .filter(Boolean)
+    .map(item => ({ value: item, expiresAt }));
+}
+
+function normalizeKeys(service) {
+  const keys = Array.isArray(service.keys) ? service.keys : keyRowsFromIdentifier(service.identifier);
+  return keys
+    .map(key => ({
+      value: String(key?.value || '').trim(),
+      expiresAt: String(key?.expiresAt || '').trim()
+    }))
+    .filter(key => key.value || key.expiresAt);
+}
+
+function keyStatus(expiresAt) {
+  const days = daysLeft(expiresAt);
+  if (days === null) return ['empty', 'Без терміну дії'];
+  if (days < 0) return ['overdue', `Ключ прострочено на ${Math.abs(days)} дн.`];
+  if (days <= 14) return ['warning', `Ключ закінчується через ${days} дн.`];
+  return ['ok', `Ключ дійсний ще ${days} дн.`];
+}
+
+function statusDot(status, hint) {
+  return `<span class="status-dot ${status}" data-tooltip="${esc(hint)}" aria-label="${esc(hint)}"></span>`;
+}
+
 function scheduleLabel(service) {
   return {
     monthly: 'Щомісячно',
@@ -147,7 +187,7 @@ function scheduleLabel(service) {
     lastDay: 'Останній день місяця',
     firstMonday: 'Перший понеділок',
     once: 'Разово',
-    custom: `Власний графік ${service.cronRule || ''}`.trim(),
+    custom: `Правило повторення ${service.cronRule || ''}`.trim(),
     manual: 'Вручну'
   }[service.schedule] || '—';
 }
@@ -222,7 +262,7 @@ function filtered() {
   const sortMode = $('sortMode').value;
   const list = services
     .filter(service => !service.archived)
-    .filter(service => [service.owner, service.name, service.type, service.provider, service.identifier, service.notes].join(' ').toLowerCase().includes(query))
+    .filter(service => [service.owner, service.name, service.type, service.provider, service.identifier, service.notes, ...normalizeKeys(service).map(key => key.value)].join(' ').toLowerCase().includes(query))
     .filter(service => statusFilter === 'all' || statusOf(service.paidUntil)[0] === statusFilter)
     .filter(service => typeFilter === 'all' || service.type === typeFilter)
     .filter(service => ownerFilter === 'all' || [service.pm, service.accountant, service.manager, service.owner].includes(ownerFilter));
@@ -326,7 +366,7 @@ function serviceLine(service) {
     <div><span class="service-name">${esc(service.name)}</span><span class="sub">${esc(service.owner)} · ${esc(service.provider || '—')} · ${money(serviceAmount(service))}</span></div>
     <span class="type-pill">${esc(service.type)}</span>
     <span><b>${fmt(service.paidUntil)}</b><span class="sub">${esc(scheduleLabel(service))}</span></span>
-    <span class="badge ${status}" title="${hint}">${label}</span>
+    ${status === 'overdue' ? statusDot(status, hint) : `<span class="badge ${status}" title="${esc(hint)}">${esc(label)}</span>`}
     ${addButton}
   </div>`;
 }
@@ -338,6 +378,11 @@ function compactIdentifier(value) {
   return `${parts.slice(0, 2).join(', ')} +${parts.length - 2}`;
 }
 
+function compactKeys(service) {
+  const values = normalizeKeys(service).map(key => key.value).filter(Boolean);
+  return compactIdentifier(values.join(', ') || service.identifier);
+}
+
 function daysLabel(date) {
   const days = daysLeft(date);
   if (days === null) return 'Без дати';
@@ -345,6 +390,27 @@ function daysLabel(date) {
   if (days < 0) return `прострочено ${Math.abs(days)} ${unit}`;
   if (days === 0) return 'сьогодні';
   return `${days} ${unit}`;
+}
+
+function dueStatusControl(date) {
+  const [status, label, hint] = statusOf(date);
+  if (status === 'overdue') return statusDot(status, hint);
+  return `<span class="badge ${status}" title="${esc(hint)}">${esc(daysLabel(date) || label)}</span>`;
+}
+
+function renderServiceKeys(service) {
+  const keys = normalizeKeys(service);
+  if (!keys.length) return empty('Ключі для цього сервісу не додані.', 'Інформація порожня');
+  return `<div class="service-key-list">
+    ${keys.map(key => {
+      const [status, hint] = keyStatus(key.expiresAt);
+      return `<div class="service-key-row">
+        <span><b>${esc(key.value || '—')}</b><small>Ключ</small></span>
+        <span><b>${fmt(key.expiresAt)}</b><small>Термін дії</small></span>
+        ${statusDot(status, hint)}
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 function providerName(service) {
@@ -431,9 +497,9 @@ function serviceRow(service) {
     <div class="service-cell"><input type="checkbox" class="service-check" value="${service.id}" /><span class="service-avatar mini">${esc(service.name).slice(0, 1).toUpperCase()}</span><span class="service-title"><b>${esc(service.name)}</b><span class="sub">${esc(service.owner)}</span></span></div>
     <div><span class="type-pill">${esc(service.type)}</span></div>
     <div>${esc(service.provider || '—')}</div>
-    <div title="${esc(service.identifier || '')}">${esc(compactIdentifier(service.identifier))}</div>
+    <div title="${esc(normalizeKeys(service).map(key => key.value).join(', ') || service.identifier || '')}">${esc(compactKeys(service))}</div>
     <div class="date-cell"><b>${fmt(service.paidUntil)}</b><span class="sub">${scheduleLabel(service)} · ${money(serviceAmount(service))}</span></div>
-    <div class="status-cell"><span class="badge ${status}" title="${hint}">${daysLabel(service.paidUntil)}</span></div>
+    <div class="status-cell">${dueStatusControl(service.paidUntil)}</div>
     <div class="table-actions">${actions || '<span class="readonly-label">Тільки перегляд</span>'}<button class="chip-btn context-btn" title="Ще" aria-label="Ще" onclick="openServiceDetail('${service.id}')">•••</button></div>
   </div>`;
 }
@@ -503,7 +569,7 @@ function renderServices() {
             <span class="service-avatar mini">${esc(group.provider).slice(0, 1).toUpperCase()}</span>
             <span><b>${esc(group.provider)}</b><small>${group.items.length} точок · найближча: ${fmt(nearest)}</small></span>
             <strong>${money(total)} / міс</strong>
-            <span class="badge ${status}">${overdue ? `${overdue} прострочено` : daysLabel(nearest)}</span>
+            ${overdue ? statusDot('overdue', `Прострочено: ${overdue}`) : `<span class="badge ${status}">${esc(daysLabel(nearest))}</span>`}
           </button>`;
         }).join('') || empty('У цій категорії немає провайдерів.', 'Провайдерів не знайдено')}
       </aside>
@@ -531,13 +597,13 @@ function renderServices() {
                 <span><b>${esc(service.owner || service.name)}</b><small>${esc(service.name)} · ${esc(service.type)}</small></span>
               </div>
               <div class="point-payment">
-                <span><small>Ключ / ID</small><b title="${esc(service.identifier || '')}">${esc(compactIdentifier(service.identifier))}</b></span>
+                <span><small>Ключі</small><b title="${esc(normalizeKeys(service).map(key => key.value).join(', ') || service.identifier || '')}">${esc(compactKeys(service))}</b></span>
                 <span><small>Графік</small><b>${esc(scheduleLabel(service))}</b></span>
                 <span><small>Сума</small><b>${money(serviceAmount(service))}</b></span>
                 <span><small>Наступна</small><b>${fmt(service.paidUntil)}</b></span>
               </div>
               <div class="point-side">
-                <span class="badge ${status}" title="${hint}">${daysLabel(service.paidUntil)}</span>
+                ${dueStatusControl(service.paidUntil)}
                 <small>${esc(selectedResponsible(service))}</small>
                 <small>${serviceDocsCount(service)} док. · ${paymentHistoryCount(service)} оплат</small>
               </div>
@@ -665,6 +731,9 @@ window.openServiceDetail = id => {
   $('serviceDetailContent').innerHTML = `<div class="detail-grid">
     <section class="detail-panel"><p class="eyebrow">Основна інформація</p>
       <dl><dt>Провайдер</dt><dd>${esc(service.provider || '—')}</dd><dt>Кабінет</dt><dd>${service.cabinetLink ? `<a href="${esc(service.cabinetLink)}" target="_blank">відкрити</a>` : '—'}</dd><dt>Логін</dt><dd>${esc(service.serviceLogin || '—')}</dd><dt>Контакт</dt><dd>${esc(service.contact || '—')}</dd><dt>Категорія</dt><dd>${esc(service.type)}</dd><dt>Опис</dt><dd>${esc(service.description || service.notes || '—')}</dd></dl>
+    </section>
+    <section class="detail-panel"><p class="eyebrow">Інформація про сервіс</p>
+      ${renderServiceKeys(service)}
     </section>
     <section class="detail-panel"><p class="eyebrow">Фінанси</p>
       <dl><dt>Сума</dt><dd>${money(service.plannedAmount)}</dd><dt>Валюта</dt><dd>${esc(service.currency || 'UAH')}</dd><dt>Курс</dt><dd>${esc(service.exchangeRate || 1)}</dd><dt>Вартість у грн</dt><dd>${money(serviceAmount(service) * Number(service.exchangeRate || 1))}</dd><dt>ПДВ</dt><dd>${esc(service.vat || 0)}%</dd></dl>
@@ -949,6 +1018,50 @@ function render() {
   save();
 }
 
+function usesFiscalKeys(type = $('serviceType')?.value) {
+  return ['РРО', 'ПРРО'].includes(normalizeCategory(type));
+}
+
+function renderKeysEditor(keys = [{ value: '', expiresAt: '' }]) {
+  const rows = keys.length ? keys : [{ value: '', expiresAt: '' }];
+  $('keysList').innerHTML = rows.map((key, index) => `<div class="key-row">
+    <label>Ключ<input class="key-value" value="${esc(key.value || '')}" placeholder="400190250" /></label>
+    <label>Термін дії<input class="key-expires" type="date" value="${esc(key.expiresAt || '')}" /></label>
+    <button type="button" class="icon-btn remove-key" aria-label="Видалити ключ" title="Видалити ключ" onclick="removeKeyRow(${index})">×</button>
+  </div>`).join('');
+}
+
+function collectKeys() {
+  if (!usesFiscalKeys()) return [];
+  return [...document.querySelectorAll('#keysList .key-row')]
+    .map(row => ({
+      value: row.querySelector('.key-value')?.value.trim() || '',
+      expiresAt: row.querySelector('.key-expires')?.value || ''
+    }))
+    .filter(key => key.value || key.expiresAt);
+}
+
+function syncKeysSection(keys = null) {
+  const visible = usesFiscalKeys();
+  $('keysSection').hidden = !visible;
+  if (visible && keys) renderKeysEditor(keys);
+  if (visible && !$('keysList').children.length) renderKeysEditor();
+}
+
+window.removeKeyRow = index => {
+  const keys = collectKeys();
+  keys.splice(index, 1);
+  renderKeysEditor(keys.length ? keys : [{ value: '', expiresAt: '' }]);
+};
+
+$('addKeyBtn')?.addEventListener('click', () => {
+  renderKeysEditor([...collectKeys(), { value: '', expiresAt: '' }]);
+});
+
+$('serviceType')?.addEventListener('change', () => {
+  syncKeysSection(collectKeys());
+});
+
 window.openAdd = (owner = '') => {
   if (!requirePermission('write')) return;
   $('serviceForm').reset();
@@ -956,6 +1069,10 @@ window.openAdd = (owner = '') => {
   $('serviceId').value = '';
   $('owner').value = owner;
   $('intervalDays').value = 30;
+  $('servicePassword').value = '';
+  $('passwordField').hidden = !canViewSecrets();
+  renderKeysEditor();
+  syncKeysSection();
   $('serviceDialog').showModal();
 };
 
@@ -971,24 +1088,21 @@ window.openEdit = id => {
   $('provider').value = service.provider || '';
   $('cabinetLink').value = service.cabinetLink || '';
   $('serviceLogin').value = service.serviceLogin || '';
+  $('servicePassword').value = canViewSecrets() ? service.servicePassword || '' : '';
+  $('passwordField').hidden = !canViewSecrets();
   $('contact').value = service.contact || '';
-  $('country').value = service.country || '';
-  $('identifier').value = service.identifier || '';
   $('description').value = service.description || '';
   $('paidUntil').value = service.paidUntil || '';
   $('plannedAmount').value = service.plannedAmount || '';
   $('currency').value = service.currency || 'UAH';
-  $('exchangeRate').value = service.exchangeRate || 1;
-  $('vat').value = service.vat || 0;
-  $('pm').value = service.pm || '';
-  $('accountant').value = service.accountant || '';
-  $('manager').value = service.manager || '';
   $('tags').value = service.tags || '';
   $('reminders').value = service.reminders || '30,14,7,3,1';
   $('scheduleType').value = service.schedule || 'monthly';
   $('intervalDays').value = service.intervalDays || 30;
   $('cronRule').value = service.cronRule || '';
   $('notes').value = service.notes || '';
+  renderKeysEditor(normalizeKeys(service));
+  syncKeysSection(normalizeKeys(service));
   $('serviceDialog').showModal();
 };
 
@@ -1079,6 +1193,8 @@ $('serviceForm').addEventListener('submit', event => {
   event.preventDefault();
   if (!requirePermission('write')) return;
   const id = $('serviceId').value;
+  const existing = services.find(service => service.id === id);
+  const keys = collectKeys();
   const data = {
     id: id || uid(),
     owner: $('owner').value.trim(),
@@ -1087,18 +1203,20 @@ $('serviceForm').addEventListener('submit', event => {
     provider: $('provider').value.trim(),
     cabinetLink: $('cabinetLink').value.trim(),
     serviceLogin: $('serviceLogin').value.trim(),
+    servicePassword: canViewSecrets() ? $('servicePassword').value : existing?.servicePassword || '',
     contact: $('contact').value.trim(),
-    country: $('country').value.trim(),
-    identifier: $('identifier').value.trim(),
+    country: existing?.country || '',
+    identifier: keys.map(key => key.value).filter(Boolean).join(', '),
+    keys,
     description: $('description').value.trim(),
     paidUntil: $('paidUntil').value,
     plannedAmount: Number($('plannedAmount').value || 0),
     currency: $('currency').value,
-    exchangeRate: Number($('exchangeRate').value || 1),
-    vat: Number($('vat').value || 0),
-    pm: $('pm').value.trim(),
-    accountant: $('accountant').value.trim(),
-    manager: $('manager').value.trim(),
+    exchangeRate: Number(existing?.exchangeRate || 1),
+    vat: Number(existing?.vat || 0),
+    pm: existing?.pm || '',
+    accountant: existing?.accountant || '',
+    manager: existing?.manager || '',
     tags: $('tags').value.trim(),
     reminders: $('reminders').value.trim(),
     schedule: $('scheduleType').value,
@@ -1107,7 +1225,7 @@ $('serviceForm').addEventListener('submit', event => {
     notes: $('notes').value.trim()
   };
   if (id) {
-    const before = services.find(service => service.id === id);
+    const before = existing;
     services = services.map(service => service.id === id ? { ...service, ...data } : service);
     ['plannedAmount', 'paidUntil', 'schedule', 'pm', 'accountant', 'manager'].forEach(field => {
       if (String(before?.[field] ?? '') !== String(data[field] ?? '')) auditLog(id, data.name, `змінив ${field}`, before?.[field] ?? '', data[field] ?? '');
@@ -1289,6 +1407,26 @@ function download(blob, name) {
   URL.revokeObjectURL(link.href);
 }
 
+function initStatusTooltip() {
+  const tooltip = document.createElement('div');
+  tooltip.className = 'payops-status-tooltip';
+  document.body.appendChild(tooltip);
+
+  const hide = () => tooltip.classList.remove('show');
+  const move = event => {
+    const target = event.target.closest?.('.status-dot[data-tooltip]');
+    if (!target) return hide();
+    tooltip.textContent = target.dataset.tooltip || '';
+    tooltip.style.left = `${Math.min(window.innerWidth - 16, event.clientX + 14)}px`;
+    tooltip.style.top = `${Math.max(12, event.clientY - 42)}px`;
+    tooltip.classList.add('show');
+  };
+
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseleave', hide);
+  document.addEventListener('scroll', hide, true);
+}
+
 $('importBtn').onclick = () => {
   if (!requirePermission('import')) return;
   $('importFile').click();
@@ -1330,4 +1468,5 @@ $('clearHistoryBtn').onclick = () => {
   }
 };
 
+initStatusTooltip();
 render();

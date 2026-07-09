@@ -391,28 +391,32 @@
       <input type="hidden" id="serviceId" />
       <div class="form-grid">
         <label>ФОП / компанія<input id="owner" required /></label>
-        <label>Назва сервісу<input id="serviceName" required /></label>
+        <label>Назва точки<input id="serviceName" required /></label>
         <label>Категорія оплати<select id="serviceType"><option>Інтернет</option><option>РРО</option><option>ПРРО</option><option>Домени</option><option>Сервера</option><option>VPN</option><option>Телефонія</option><option>Email</option><option>Ліцензії</option><option>Microsoft</option><option>Google</option><option>SSL</option><option>POS</option><option>Хмара</option><option>CRM</option><option>Антивірус</option><option>ВЧАСНО</option><option>Інше</option></select></label>
-        <label>Провайдер / кабінет<input id="provider" /></label>
+        <label>Провайдер<input id="provider" placeholder="Контрагент, який надає послугу" /></label>
         <label>Посилання на кабінет<input id="cabinetLink" type="url" placeholder="https://..." /></label>
         <label>Логін<input id="serviceLogin" /></label>
+        <label id="passwordField">Пароль<input id="servicePassword" type="password" autocomplete="new-password" /></label>
         <label>Контакт<input id="contact" /></label>
-        <label>Країна<input id="country" placeholder="Україна" /></label>
-        <label class="wide">Ключ / логін / ID<textarea id="identifier" rows="2"></textarea></label>
         <label class="wide">Опис<textarea id="description" rows="2"></textarea></label>
+        <section id="keysSection" class="form-section wide">
+          <div class="form-section-head">
+            <div>
+              <p class="eyebrow">Інформація</p>
+              <h3>Ключі сервісу</h3>
+            </div>
+            <button type="button" class="btn soft small" id="addKeyBtn">+ Додати ключ</button>
+          </div>
+          <div id="keysList" class="keys-editor"></div>
+        </section>
         <label>Сплачено до<input id="paidUntil" type="date" /></label>
         <label>Планова сума, грн<input id="plannedAmount" type="number" min="0" step="0.01" /></label>
         <label>Валюта<select id="currency"><option>UAH</option><option>USD</option><option>EUR</option><option>GBP</option></select></label>
-        <label>Курс<input id="exchangeRate" type="number" min="0" step="0.0001" value="1" /></label>
-        <label>ПДВ, %<input id="vat" type="number" min="0" step="0.01" value="0" /></label>
-        <label>PM<input id="pm" /></label>
-        <label>Бухгалтер<input id="accountant" /></label>
-        <label>Керівник<input id="manager" /></label>
         <label>Теги<input id="tags" placeholder="магазин, критично" /></label>
         <label>Нагадування<input id="reminders" placeholder="30,14,7,3,1" /></label>
         <label>Графік<select id="scheduleType"><option value="monthly">Щомісяця</option><option value="bimonthly">Раз у два місяці</option><option value="quarterly">Раз у три місяці</option><option value="semiannual">Раз у шість місяців</option><option value="yearly">Раз на рік</option><option value="weeks">Кожні N тижнів</option><option value="days">Кожні N днів</option><option value="lastDay">Останній день місяця</option><option value="firstMonday">Перший понеділок</option><option value="once">Разово</option><option value="custom">Власний графік</option><option value="manual">Вручну</option></select></label>
         <label>N днів<input id="intervalDays" type="number" min="1" value="30" /></label>
-        <label>Cron-like<input id="cronRule" placeholder="0 9 1 * *" /></label>
+        <label>Графік нагадувань<input id="cronRule" placeholder="Наприклад: щомісяця 1 числа" /></label>
         <label class="wide">Нотатки<textarea id="notes" rows="3"></textarea></label>
       </div>
       <menu>
