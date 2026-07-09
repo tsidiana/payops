@@ -134,11 +134,19 @@ function daysLeft(date) {
 function statusOf(date) {
   const days = daysLeft(date);
   if (days === null) return ['empty', 'Без дати', 'Немає дати оплати'];
-  if (days < 0) return ['overdue', `${Math.abs(days)} дн.`, `Прострочено на ${Math.abs(days)} дн.`, 'grade-overdue'];
+  if (days < 0) return ['overdue', `${Math.abs(days)} дн.`, `Прострочено на ${Math.abs(days)} ${dayWord(Math.abs(days))}`, 'grade-overdue'];
   if (days <= 3) return ['danger', `${days} дн.`, 'Дедлайн поруч', 'grade-red'];
   if (days <= 7) return ['warning', `${days} дн.`, 'Скоро платити'];
   if (days <= 14) return ['soon', `${days} дн.`, 'На контролі'];
   return ['ok', `${days} дн.`, 'Все ок'];
+}
+
+function dayWord(value) {
+  const mod10 = Math.abs(value) % 10;
+  const mod100 = Math.abs(value) % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'день';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'дні';
+  return 'днів';
 }
 
 function canViewSecrets() {
@@ -180,7 +188,7 @@ function serviceStatusText(date) {
   if (days === null) return 'Без дати';
   if (days < 0) return 'Прострочено';
   if (days === 0) return 'Сьогодні';
-  return `Через ${days} дн.`;
+  return `Через ${days} ${dayWord(days)}`;
 }
 
 function compactStatus(status, text, hint) {
@@ -566,8 +574,8 @@ function renderServices() {
           const statusHint = overdue ? `${overdue} прострочених точок` : soon ? `${soon} оплат наближається` : 'Критичних оплат немає';
           return `<button class="category-card ${group.category === selectedServiceCategory ? 'selected' : ''}" onclick="selectServiceCategory(${jsArg(group.category)})">
             <span class="category-title">${esc(group.category)}</span>
-            <b>${group.items.length} точок</b>
             ${compactStatus(status, statusText, statusHint)}
+            <b>${group.items.length} точок</b>
             <strong>${money(total)} / міс</strong>
             <i style="--health:${health}%"></i>
           </button>`;
@@ -583,8 +591,9 @@ function renderServices() {
           const statusHint = overdue ? `${overdue} прострочених точок` : statusOf(nearest)[2];
           return `<button class="provider-card ${group.provider === selectedServiceProvider ? 'selected' : ''}" onclick="selectServiceProvider(${jsArg(group.provider)})">
             <span class="service-avatar mini">${esc(group.provider).slice(0, 1).toUpperCase()}</span>
-            <span><b>${esc(group.provider)}</b><small>${group.items.length} точок</small></span>
+            <span><b>${esc(group.provider)}</b></span>
             ${compactStatus(status, statusText, statusHint)}
+            <small>${group.items.length} точок</small>
             <strong>${money(total)} / міс</strong>
           </button>`;
         }).join('') || empty('У цій категорії немає провайдерів.', 'Провайдерів не знайдено')}

@@ -6307,6 +6307,7 @@ select {
   grid-template-areas:
     "avatar info"
     "avatar status"
+    "avatar count"
     "avatar total";
   align-items: center;
   gap: 6px 10px !important;
@@ -6324,6 +6325,11 @@ select {
 
 #serviceTable .provider-card > .status-compact {
   grid-area: status;
+  justify-self: start;
+}
+
+#serviceTable .provider-card > small {
+  grid-area: count;
   justify-self: start;
 }
 
@@ -6527,9 +6533,10 @@ select {
   #serviceTable .point-card {
     grid-template-columns: minmax(0, 1fr) minmax(152px, auto) !important;
     grid-template-areas:
-      "main actions"
+      "main main"
       "payment payment"
-      "side side";
+      "side actions";
+    align-items: start;
   }
 
   #serviceTable .point-main {
@@ -6542,10 +6549,12 @@ select {
 
   #serviceTable .point-side {
     grid-area: side;
+    align-self: start;
   }
 
   #serviceTable .point-actions {
     grid-area: actions;
+    align-self: start;
     min-width: 152px !important;
   }
 
@@ -6561,9 +6570,9 @@ select {
   #serviceTable .point-card {
     grid-template-columns: minmax(0, 1fr) minmax(152px, auto) !important;
     grid-template-areas:
-      "main actions"
+      "main main"
       "payment payment"
-      "side side";
+      "side actions";
   }
 
   #serviceTable .point-main {
