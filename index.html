@@ -6,11 +6,11 @@
   <title>PayOps | Контроль оплат</title>
   <link rel="icon" href="assets/payops-icon.svg?v=20260708-brand2" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="assets/payops-icon.svg?v=20260708-brand2" />
-  <link rel="stylesheet" href="styles.css?v=20260709-roles" />
+  <link rel="stylesheet" href="styles.css?v=20260709-login-clean" />
 </head>
 <body class="is-logged-out">
   <section id="loginScreen" class="login-screen">
-    <form id="loginForm" class="login-card">
+    <form id="loginForm" class="login-card" autocomplete="off">
       <div class="brand login-brand">
         <div class="brand-mark">P</div>
         <div>
@@ -23,8 +23,8 @@
         <h1>Увійдіть за ніком і паролем</h1>
         <p>Доступ до оплат, історії та ролей відкривається відповідно до прав користувача.</p>
       </div>
-      <label>Нік користувача<input id="loginUsername" autocomplete="username" required placeholder="superadmin" /></label>
-      <label>Пароль<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••" /></label>
+      <label>Нік користувача<input id="loginUsername" autocomplete="off" required placeholder="Введіть нік" value="" /></label>
+      <label>Пароль<input id="loginPassword" type="password" autocomplete="new-password" required placeholder="Введіть пароль" value="" /></label>
       <button class="btn primary">Увійти</button>
     </form>
   </section>
@@ -483,6 +483,6 @@
   </dialog>
 
   <div id="toast" class="toast"></div>
-  <script src="app.js?v=20260709-roles"></script>
+  <script src="app.js?v=20260709-login-clean"></script>
 </body>
 </html>
