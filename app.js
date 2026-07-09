@@ -976,8 +976,6 @@ function applySidebarState() {
 function applyRoleUi() {
   if (!currentUser) return;
   const firstName = currentUser.name.split(' ')[0] || currentUser.name;
-  $('sidebarRole').textContent = roleMeta[currentUser.role].label;
-  $('roleHint').textContent = roleMeta[currentUser.role].hint;
   $('currentUserName').textContent = currentUser.name;
   $('currentUserRole').textContent = roleMeta[currentUser.role].label;
   if (document.querySelector('#overview.page.active')) {

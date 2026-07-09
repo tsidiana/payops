@@ -5550,6 +5550,133 @@ canvas {
   }
 }
 
+/* Sidebar and Services toolbar refinements */
+.sidebar {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.sidebar .sidebar-card {
+  margin-top: 0 !important;
+}
+
+.sidebar .side-nav {
+  flex: 1 0 auto;
+}
+
+#services .bulk-bar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0 0 28px !important;
+  padding: 14px !important;
+  border: 1px solid rgba(255,255,255,0.58) !important;
+  border-radius: 24px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.76), rgba(255,255,255,.58)) !important;
+  box-shadow: 0 18px 48px rgba(91,105,180,.09), inset 0 1px 0 rgba(255,255,255,.72) !important;
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+}
+
+#services .bulk-bar > * {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#services .bulk-bar label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 14px;
+  border: 1px solid rgba(255,255,255,.55);
+  border-radius: 18px;
+  background: rgba(255,255,255,.58);
+  color: #1F2434;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+}
+
+#services .bulk-bar input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin: 0;
+  accent-color: #6E72FF;
+}
+
+#services .bulk-bar select,
+#services .bulk-bar input:not([type="checkbox"]),
+#services .bulk-bar .btn {
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: 18px !important;
+}
+
+#services .bulk-bar select,
+#services .bulk-bar input:not([type="checkbox"]) {
+  flex: 1 1 220px;
+  min-width: 180px;
+  max-width: 320px;
+  padding: 0 16px;
+  border: 1px solid rgba(255,255,255,.58) !important;
+  background-color: rgba(255,255,255,.64) !important;
+  color: #1F2434;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.72), 0 10px 28px rgba(91,105,180,.06);
+}
+
+#services .bulk-bar select {
+  appearance: none;
+  padding-right: 38px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #687089 50%),
+    linear-gradient(135deg, #687089 50%, transparent 50%);
+  background-position:
+    calc(100% - 20px) 19px,
+    calc(100% - 14px) 19px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+#services .bulk-bar .btn {
+  flex: 0 0 auto;
+  padding: 0 16px !important;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  #services .bulk-bar {
+    display: grid !important;
+    grid-template-columns: 1fr;
+  }
+
+  #services .bulk-bar label,
+  #services .bulk-bar select,
+  #services .bulk-bar input:not([type="checkbox"]),
+  #services .bulk-bar .btn {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 1366px) {
   .top-actions {
     justify-content: flex-start;
