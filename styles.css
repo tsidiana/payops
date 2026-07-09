@@ -5550,6 +5550,40 @@ canvas {
   }
 }
 
+@media (max-width: 1700px) {
+  #serviceTable .point-card {
+    grid-template-columns: minmax(0, 1fr) minmax(152px, auto) !important;
+    grid-template-areas:
+      "main actions"
+      "payment payment"
+      "side side";
+  }
+
+  #serviceTable .point-main {
+    grid-area: main;
+  }
+
+  #serviceTable .point-payment {
+    grid-area: payment;
+  }
+
+  #serviceTable .point-side {
+    grid-area: side;
+  }
+
+  #serviceTable .point-actions {
+    grid-area: actions;
+    min-width: 152px !important;
+  }
+
+  #serviceTable .point-actions .chip-btn.action-view,
+  #serviceTable .point-actions .chip-btn.action-edit,
+  #serviceTable .point-actions .chip-btn.action-archive,
+  #serviceTable .point-actions .chip-btn.context-btn {
+    display: inline-grid !important;
+  }
+}
+
 /* Sidebar and Services toolbar refinements */
 .sidebar {
   overflow-y: auto !important;
@@ -6210,5 +6244,370 @@ select {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: .001ms !important;
+  }
+}
+
+/* Final Services registry corrections */
+.sidebar {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.sidebar::-webkit-scrollbar,
+.sidebar::-webkit-scrollbar-track,
+.sidebar::-webkit-scrollbar-thumb {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+
+#serviceTable .category-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 9px !important;
+  min-height: 132px;
+  height: auto !important;
+  max-width: 100%;
+  overflow: hidden !important;
+}
+
+#serviceTable .category-card .category-title,
+#serviceTable .provider-card b {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#serviceTable .category-card b,
+#serviceTable .category-card strong,
+#serviceTable .provider-card small,
+#serviceTable .provider-card strong {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#serviceTable .category-card .status-compact {
+  max-width: 100%;
+}
+
+#serviceTable .provider-card {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-areas:
+    "avatar info"
+    "avatar status"
+    "avatar total";
+  align-items: center;
+  gap: 6px 10px !important;
+  min-height: 104px;
+  height: auto !important;
+  max-width: 100%;
+  overflow: hidden !important;
+}
+
+#serviceTable .provider-card > span:not(.service-avatar) {
+  grid-area: info;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#serviceTable .provider-card > .status-compact {
+  grid-area: status;
+  justify-self: start;
+}
+
+#serviceTable .provider-card > strong {
+  grid-area: total;
+  justify-self: start;
+}
+
+.status-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #687089;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.status-compact i {
+  display: block;
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-radius: 999px;
+  background: #8AB8FF;
+  box-shadow: 0 0 0 5px rgba(138,184,255,.13);
+}
+
+.status-compact span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-compact.overdue {
+  color: #D9365E;
+}
+
+.status-compact.overdue i {
+  background: #FF6B81;
+  box-shadow: 0 0 0 5px rgba(255,107,129,.14);
+}
+
+.status-compact.warning,
+.status-compact.danger,
+.status-compact.soon {
+  color: #B77900;
+}
+
+.status-compact.warning i,
+.status-compact.danger i,
+.status-compact.soon i {
+  background: #F4B740;
+  box-shadow: 0 0 0 5px rgba(244,183,64,.14);
+}
+
+.status-compact.ok i {
+  background: #6FCF97;
+  box-shadow: 0 0 0 5px rgba(111,207,151,.14);
+}
+
+.status-compact.empty i {
+  background: #9098AF;
+  box-shadow: 0 0 0 5px rgba(144,152,175,.12);
+}
+
+#serviceTable .point-card {
+  display: grid !important;
+  grid-template-columns: minmax(190px, 1.05fr) minmax(300px, 1.28fr) minmax(138px, .62fr) minmax(152px, auto) !important;
+  gap: 14px !important;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden !important;
+}
+
+#serviceTable .point-card > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#serviceTable .point-side {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 5px !important;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#serviceTable .point-side .status-compact,
+#serviceTable .point-side small {
+  max-width: 100%;
+}
+
+#serviceTable .point-payment {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#serviceTable .point-payment span,
+#serviceTable .point-main > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+}
+
+#serviceTable .point-payment b,
+#serviceTable .point-payment small,
+#serviceTable .point-main small,
+#serviceTable .point-side small {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap !important;
+}
+
+#serviceTable .point-main b {
+  display: block !important;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap !important;
+}
+
+#serviceTable .point-actions {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  width: auto !important;
+  min-width: 152px !important;
+  max-width: 100%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#serviceTable .point-actions .chip-btn {
+  display: inline-grid !important;
+  place-items: center;
+  flex: 0 0 32px !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  text-indent: -999px;
+}
+
+#serviceTable .point-actions .action-docs,
+#serviceTable .point-actions .action-history,
+#serviceTable .point-actions .action-pay {
+  display: none !important;
+}
+
+#serviceTable .point-actions .action-view,
+#serviceTable .point-actions .action-edit,
+#serviceTable .point-actions .action-archive,
+#serviceTable .point-actions .context-btn {
+  display: inline-grid !important;
+}
+
+#serviceTable .point-actions .chip-btn.action-view,
+#serviceTable .point-actions .chip-btn.action-edit,
+#serviceTable .point-actions .chip-btn.action-archive,
+#serviceTable .point-actions .chip-btn.context-btn {
+  display: inline-grid !important;
+}
+
+#serviceTable .point-actions .chip-btn::before {
+  text-indent: 0;
+}
+
+#serviceTable .point-actions .action-view::before {
+  content: "👁";
+}
+
+#serviceTable .point-actions .action-edit::before {
+  content: "✎";
+}
+
+#serviceTable .point-actions .action-archive::before {
+  content: "🗑";
+}
+
+@media (max-width: 1700px) {
+  #serviceTable .point-card {
+    grid-template-columns: minmax(0, 1fr) minmax(152px, auto) !important;
+    grid-template-areas:
+      "main actions"
+      "payment payment"
+      "side side";
+  }
+
+  #serviceTable .point-main {
+    grid-area: main;
+  }
+
+  #serviceTable .point-payment {
+    grid-area: payment;
+  }
+
+  #serviceTable .point-side {
+    grid-area: side;
+  }
+
+  #serviceTable .point-actions {
+    grid-area: actions;
+    min-width: 152px !important;
+  }
+
+  #serviceTable .point-actions .chip-btn.action-view,
+  #serviceTable .point-actions .chip-btn.action-edit,
+  #serviceTable .point-actions .chip-btn.action-archive,
+  #serviceTable .point-actions .chip-btn.context-btn {
+    display: inline-grid !important;
+  }
+}
+
+@media (max-width: 1500px) {
+  #serviceTable .point-card {
+    grid-template-columns: minmax(0, 1fr) minmax(152px, auto) !important;
+    grid-template-areas:
+      "main actions"
+      "payment payment"
+      "side side";
+  }
+
+  #serviceTable .point-main {
+    grid-area: main;
+  }
+
+  #serviceTable .point-payment {
+    grid-area: payment;
+  }
+
+  #serviceTable .point-side {
+    grid-area: side;
+  }
+
+  #serviceTable .point-actions {
+    grid-area: actions;
+    min-width: 152px !important;
+  }
+
+  #serviceTable .point-actions .chip-btn.action-view,
+  #serviceTable .point-actions .chip-btn.action-edit,
+  #serviceTable .point-actions .chip-btn.action-archive,
+  #serviceTable .point-actions .chip-btn.context-btn {
+    display: inline-grid !important;
+  }
+}
+
+@media (max-width: 1280px) {
+  #serviceTable .point-payment {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  #serviceTable .point-card {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      "main"
+      "payment"
+      "side"
+      "actions";
+  }
+
+  #serviceTable .point-actions {
+    justify-content: flex-start !important;
   }
 }

@@ -175,6 +175,18 @@ function statusDot(status, hint) {
   return `<span class="status-dot ${status}" data-tooltip="${esc(hint)}" aria-label="${esc(hint)}"></span>`;
 }
 
+function serviceStatusText(date) {
+  const days = daysLeft(date);
+  if (days === null) return 'Без дати';
+  if (days < 0) return 'Прострочено';
+  if (days === 0) return 'Сьогодні';
+  return `Через ${days} дн.`;
+}
+
+function compactStatus(status, text, hint) {
+  return `<span class="status-compact ${status}" data-tooltip="${esc(hint || text)}"><i></i><span>${esc(text)}</span></span>`;
+}
+
 function scheduleLabel(service) {
   return {
     monthly: 'Щомісячно',
@@ -393,9 +405,8 @@ function daysLabel(date) {
 }
 
 function dueStatusControl(date) {
-  const [status, label, hint] = statusOf(date);
-  if (status === 'overdue') return statusDot(status, hint);
-  return `<span class="badge ${status}" title="${esc(hint)}">${esc(daysLabel(date) || label)}</span>`;
+  const [status, , hint] = statusOf(date);
+  return compactStatus(status, serviceStatusText(date), hint);
 }
 
 function renderServiceKeys(service) {
@@ -550,10 +561,13 @@ function renderServices() {
           const soon = group.items.filter(service => ['danger', 'warning', 'soon'].includes(statusOf(service.paidUntil)[0])).length;
           const total = group.items.reduce((sum, service) => sum + serviceAmount(service), 0);
           const health = providerHealth(group.items);
+          const status = overdue ? 'overdue' : soon ? 'warning' : 'ok';
+          const statusText = overdue ? 'Прострочено' : soon ? 'Скоро оплата' : 'Під контролем';
+          const statusHint = overdue ? `${overdue} прострочених точок` : soon ? `${soon} оплат наближається` : 'Критичних оплат немає';
           return `<button class="category-card ${group.category === selectedServiceCategory ? 'selected' : ''}" onclick="selectServiceCategory(${jsArg(group.category)})">
             <span class="category-title">${esc(group.category)}</span>
-            <b>${group.providers.length} провайдери</b>
-            <small>${group.items.length} точок · ${overdue ? `${overdue} прострочено` : `${soon} скоро оплата`}</small>
+            <b>${group.items.length} точок</b>
+            ${compactStatus(status, statusText, statusHint)}
             <strong>${money(total)} / міс</strong>
             <i style="--health:${health}%"></i>
           </button>`;
@@ -565,11 +579,13 @@ function renderServices() {
           const total = group.items.reduce((sum, service) => sum + serviceAmount(service), 0);
           const nearest = nearestDate(group.items);
           const status = overdue ? 'overdue' : group.items.some(service => ['danger', 'warning', 'soon'].includes(statusOf(service.paidUntil)[0])) ? 'warning' : 'ok';
+          const statusText = overdue ? 'Прострочено' : serviceStatusText(nearest);
+          const statusHint = overdue ? `${overdue} прострочених точок` : statusOf(nearest)[2];
           return `<button class="provider-card ${group.provider === selectedServiceProvider ? 'selected' : ''}" onclick="selectServiceProvider(${jsArg(group.provider)})">
             <span class="service-avatar mini">${esc(group.provider).slice(0, 1).toUpperCase()}</span>
-            <span><b>${esc(group.provider)}</b><small>${group.items.length} точок · найближча: ${fmt(nearest)}</small></span>
+            <span><b>${esc(group.provider)}</b><small>${group.items.length} точок</small></span>
+            ${compactStatus(status, statusText, statusHint)}
             <strong>${money(total)} / міс</strong>
-            ${overdue ? statusDot('overdue', `Прострочено: ${overdue}`) : `<span class="badge ${status}">${esc(daysLabel(nearest))}</span>`}
           </button>`;
         }).join('') || empty('У цій категорії немає провайдерів.', 'Провайдерів не знайдено')}
       </aside>
@@ -608,12 +624,13 @@ function renderServices() {
                 <small>${serviceDocsCount(service)} док. · ${paymentHistoryCount(service)} оплат</small>
               </div>
               <div class="point-actions" onclick="event.stopPropagation()">
-                <button class="chip-btn action-view" title="View" onclick="openServiceDetail('${service.id}')">View</button>
-                ${can('write') ? `<button class="chip-btn action-edit" title="Edit" onclick="openEdit('${service.id}')">Edit</button>` : ''}
-                ${can('write') ? `<button class="chip-btn primary-chip action-pay" title="Register payment" onclick="openPayment('${service.id}')">Pay</button>` : ''}
-                <button class="chip-btn action-docs" title="Documents" onclick="showPage('documents')">Docs</button>
-                <button class="chip-btn action-history" title="History" onclick="showPage('history')">History</button>
-                <button class="chip-btn context-btn" title="More" onclick="openServiceDetail('${service.id}')">•••</button>
+                <button class="chip-btn action-view" title="Перегляд" aria-label="Перегляд" onclick="openServiceDetail('${service.id}')">Перегляд</button>
+                ${can('write') ? `<button class="chip-btn action-edit" title="Редагувати" aria-label="Редагувати" onclick="openEdit('${service.id}')">Редагувати</button>` : ''}
+                ${can('delete') ? `<button class="chip-btn delete action-archive" title="Архів" aria-label="Архів" onclick="archiveService('${service.id}')">Архів</button>` : ''}
+                ${can('write') ? `<button class="chip-btn primary-chip action-pay" title="Оплата" aria-label="Оплата" onclick="openPayment('${service.id}')">Оплата</button>` : ''}
+                <button class="chip-btn action-docs" title="Документи" aria-label="Документи" onclick="showPage('documents')">Документи</button>
+                <button class="chip-btn action-history" title="Історія" aria-label="Історія" onclick="showPage('history')">Історія</button>
+                <button class="chip-btn context-btn" title="Ще" aria-label="Ще" onclick="openServiceDetail('${service.id}')">•••</button>
               </div>
             </article>`;
           }).join('')}
@@ -1412,7 +1429,7 @@ function initStatusTooltip() {
 
   const hide = () => tooltip.classList.remove('show');
   const move = event => {
-    const target = event.target.closest?.('.status-dot[data-tooltip]');
+    const target = event.target.closest?.('.status-dot[data-tooltip], .status-compact[data-tooltip]');
     if (!target) return hide();
     tooltip.textContent = target.dataset.tooltip || '';
     tooltip.style.left = `${Math.min(window.innerWidth - 16, event.clientX + 14)}px`;
