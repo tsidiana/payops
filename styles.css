@@ -80,16 +80,6 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   color: var(--text);
 }
 .login-brand span { color: var(--muted); }
-.login-help {
-  display: grid;
-  gap: 4px;
-  padding: 12px;
-  border-radius: var(--radius);
-  background: linear-gradient(135deg, #f4fbf7, #f5f0ff);
-  color: var(--muted);
-  font-size: 13px;
-}
-.login-help b { color: var(--text); }
 .is-authenticated .login-screen { display: none; }
 .is-logged-out .app-shell { display: none; }
 
@@ -6245,6 +6235,25 @@ select {
     scroll-behavior: auto !important;
     transition-duration: .001ms !important;
   }
+}
+
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  max-width: 100%;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.58);
+  color: #5B61D6;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+}
+
+.access-user-card .action-edit::before {
+  content: "✎";
 }
 
 /* Final Services registry corrections */

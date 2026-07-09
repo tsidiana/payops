@@ -25,6 +25,12 @@ const roleMeta = {
   viewer: { label: 'Viewer', hint: 'Тільки читання без змін', permissions: [] }
 };
 
+const pageAccess = {
+  access: ['superadmin'],
+  archive: ['superadmin', 'admin'],
+  settings: ['superadmin', 'admin']
+};
+
 const categoryOrder = ['Інтернет', 'РРО', 'ПРРО', 'Домени', 'Сервера', 'VPN', 'Телефонія', 'Email', 'Ліцензії', 'Microsoft', 'Google', 'SSL', 'POS', 'Хмара', 'CRM', 'Антивірус', 'ВЧАСНО', 'Інше'];
 const defaultCategoryLimits = { 'Інтернет': 4000, 'РРО': 5000, 'ПРРО': 8000, 'Домени': 3000, 'Сервера': 10000, 'VPN': 2500, 'Телефонія': 5000, 'Email': 3000, 'Ліцензії': 9000, 'Microsoft': 8000, 'Google': 8000, 'SSL': 2500, 'POS': 6000, 'Хмара': 12000, 'CRM': 9000, 'Антивірус': 3000, 'ВЧАСНО': 3000, 'Інше': 3000 };
 
@@ -86,7 +92,8 @@ users = users.map(user => ({
   name: user.name || user.username || 'Користувач',
   username: user.username || String(user.name || '').toLowerCase().replace(/\s+/g, '_'),
   password: user.password || '1234',
-  role: roleMeta[user.role] ? user.role : 'viewer'
+  role: roleMeta[user.role] ? user.role : 'viewer',
+  status: user.status || 'active'
 }));
 
 services = services.map(service => {
@@ -118,6 +125,15 @@ function requirePermission(permission) {
   if (can(permission)) return true;
   toast('Недостатньо прав для цієї дії');
   return false;
+}
+
+function canAccessPage(id) {
+  const roles = pageAccess[id];
+  return !roles || roles.includes(currentUser?.role);
+}
+
+function safePage(id) {
+  return canAccessPage(id) ? id : 'overview';
 }
 
 function toast(message) {
@@ -966,20 +982,19 @@ function renderArchive() {
 function renderUsers() {
   $('usersList').innerHTML = users.map(user => {
     const isCurrent = currentUser?.id === user.id;
-    const roleSelect = can('manageUsers')
-      ? `<select class="inline-role" onchange="updateUserRole('${user.id}', this.value)" ${isCurrent ? 'disabled title="Не змінюйте власну роль під час активної сесії"' : ''}>
-          ${Object.entries(roleMeta).map(([role, meta]) => `<option value="${role}" ${user.role === role ? 'selected' : ''}>${meta.label}</option>`).join('')}
-        </select>`
-      : `<span>${roleMeta[user.role]?.label || user.role}</span>`;
+    const roleLabel = `<span class="role-pill">${roleMeta[user.role]?.label || user.role}</span>`;
     const assigned = services.filter(service => [service.pm, service.accountant, service.manager, service.owner].includes(user.name)).length;
     const scope = user.role === 'superadmin' ? 'Усі сервіси, ролі, імпорт' : user.role === 'viewer' ? 'Перегляд без змін' : 'Сервіси, оплати, експорт';
-    const deleteButton = can('manageUsers') && !isCurrent ? `<button class="chip-btn delete" onclick="deleteUser('${user.id}')">Видалити</button>` : '<span class="readonly-label">Активний / захищений</span>';
+    const statusLabel = user.status === 'paused' ? 'Призупинений' : isCurrent ? 'Online' : 'Active';
+    const editButton = can('manageUsers') ? `<button class="chip-btn action-edit" title="Редагувати" aria-label="Редагувати" onclick="openUserEdit('${user.id}')">Редагувати</button>` : '';
+    const deleteButton = can('manageUsers') && !isCurrent ? `<button class="chip-btn delete" title="Видалити" aria-label="Видалити" onclick="deleteUser('${user.id}')">Видалити</button>` : '<span class="readonly-label">Активний / захищений</span>';
     return `<div class="user-row access-user-card">
       <div class="user-avatar">${esc(user.name).slice(0, 1).toUpperCase()}</div>
       <div><b>${esc(user.name)}</b><span>@${esc(user.username)} · ${assigned} сервісів</span></div>
-      <div class="user-role-cell">${roleSelect}</div>
-      <div><span class="badge ${isCurrent ? 'ok' : 'soon'}">${isCurrent ? 'Online' : 'Active'}</span><small>Останній вхід: ${isCurrent ? 'зараз' : 'сьогодні'}</small></div>
+      <div class="user-role-cell">${roleLabel}</div>
+      <div><span class="badge ${user.status === 'paused' ? 'warning' : isCurrent ? 'ok' : 'soon'}">${statusLabel}</span><small>Останній вхід: ${isCurrent ? 'зараз' : 'сьогодні'}</small></div>
       <div><b>Область доступу</b><span>${esc(scope)}</span></div>
+      ${editButton}
       ${deleteButton}
     </div>`;
   }).join('') || empty('Додайте користувачів і призначте їм ролі.', 'Користувачів немає');
@@ -1004,6 +1019,11 @@ function applyRoleUi() {
   const firstName = currentUser.name.split(' ')[0] || currentUser.name;
   $('currentUserName').textContent = currentUser.name;
   $('currentUserRole').textContent = roleMeta[currentUser.role].label;
+  document.querySelectorAll('.nav-item').forEach(button => {
+    button.hidden = !canAccessPage(button.dataset.page);
+  });
+  const activePage = document.querySelector('.page.active')?.id || 'overview';
+  if (!canAccessPage(activePage)) showPage('overview', true);
   if (document.querySelector('#overview.page.active')) {
     $('pageTitle').textContent = `Доброго дня, ${firstName}! 👋`;
     $('pageSubtitle').textContent = 'Ось що відбувається з оплатами сервісів.';
@@ -1024,6 +1044,8 @@ function render() {
     save();
     return;
   }
+  const activePage = document.querySelector('.page.active')?.id || 'overview';
+  if (!canAccessPage(activePage)) showPage('overview', true);
   renderOverview();
   renderServices();
   renderAttention();
@@ -1195,6 +1217,19 @@ window.updateUserRole = (id, role) => {
   render();
 };
 
+window.openUserEdit = id => {
+  if (!requirePermission('manageUsers')) return;
+  const user = users.find(item => item.id === id);
+  if (!user) return;
+  $('editUserId').value = user.id;
+  $('editUserName').value = user.name || '';
+  $('editUserUsername').value = user.username || '';
+  $('editUserPassword').value = user.password || '';
+  $('editUserRole').value = user.role || 'viewer';
+  $('editUserStatus').value = user.status || 'active';
+  $('userEditDialog').showModal();
+};
+
 $('loginForm').addEventListener('submit', event => {
   event.preventDefault();
   const username = $('loginUsername').value.trim();
@@ -1305,10 +1340,35 @@ $('userForm').addEventListener('submit', event => {
     name: $('userName').value.trim(),
     username,
     password: $('userPassword').value,
-    role: $('userRole').value
+    role: $('userRole').value,
+    status: 'active'
   });
   $('userForm').reset();
   toast('Користувача додано');
+  render();
+});
+
+$('userEditForm')?.addEventListener('submit', event => {
+  event.preventDefault();
+  if (!requirePermission('manageUsers')) return;
+  const id = $('editUserId').value;
+  const user = users.find(item => item.id === id);
+  if (!user) return;
+  const username = $('editUserUsername').value.trim();
+  if (!username) return toast('Вкажіть логін');
+  if (users.some(item => item.id !== id && item.username === username)) return toast('Такий логін уже існує');
+  const previousUsername = user.username;
+  user.name = $('editUserName').value.trim() || username;
+  user.username = username;
+  user.password = $('editUserPassword').value;
+  user.role = roleMeta[$('editUserRole').value] ? $('editUserRole').value : 'viewer';
+  user.status = $('editUserStatus').value || 'active';
+  if (currentUser?.id === id) {
+    currentUser = user;
+    if (previousUsername !== user.username) localStorage.setItem(SESSION_KEY, user.username);
+  }
+  $('userEditDialog').close();
+  toast('Користувача оновлено');
   render();
 });
 
@@ -1378,7 +1438,11 @@ $('sidebarToggle')?.addEventListener('click', () => {
   applySidebarState();
 });
 
-function showPage(id) {
+function showPage(id, silent = false) {
+  if (!canAccessPage(id)) {
+    if (!silent) toast('У вас немає доступу до цього розділу');
+    id = 'overview';
+  }
   document.querySelectorAll('.page').forEach(page => page.classList.toggle('active', page.id === id));
   document.querySelectorAll('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.page === id));
   const titles = {
@@ -1396,6 +1460,8 @@ function showPage(id) {
   $('pageTitle').textContent = title[0];
   $('pageSubtitle').textContent = title[1];
 }
+
+window.showPage = showPage;
 
 ['searchInput', 'statusFilter', 'typeFilter', 'sortMode', 'historySearch'].forEach(id => $(id)?.addEventListener('input', render));
 document.addEventListener('input', event => {

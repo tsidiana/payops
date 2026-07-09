@@ -6,7 +6,7 @@
   <title>PayOps | Контроль оплат</title>
   <link rel="icon" href="assets/payops-icon.svg?v=20260708-brand2" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="assets/payops-icon.svg?v=20260708-brand2" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20260709-roles" />
 </head>
 <body class="is-logged-out">
   <section id="loginScreen" class="login-screen">
@@ -26,12 +26,6 @@
       <label>Нік користувача<input id="loginUsername" autocomplete="username" required placeholder="superadmin" /></label>
       <label>Пароль<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••" /></label>
       <button class="btn primary">Увійти</button>
-      <div class="login-help">
-        <b>Демо-доступи:</b>
-        <span>superadmin / 1234</span>
-        <span>admin / 1234</span>
-        <span>viewer / 1234</span>
-      </div>
     </form>
   </section>
 
@@ -448,6 +442,36 @@
     </form>
   </dialog>
 
+  <dialog id="userEditDialog" class="modal">
+    <form id="userEditForm" method="dialog">
+      <div class="modal-head">
+        <h2>Редагувати користувача</h2>
+        <button type="button" class="icon-btn" data-close>×</button>
+      </div>
+      <input type="hidden" id="editUserId" />
+      <div class="form-grid">
+        <label>Імʼя / нік користувача<input id="editUserName" required /></label>
+        <label>Логін<input id="editUserUsername" required /></label>
+        <label>Пароль<input id="editUserPassword" type="password" required /></label>
+        <label>Роль<select id="editUserRole">
+          <option value="superadmin">Superadmin</option>
+          <option value="admin">Admin</option>
+          <option value="pm">PM</option>
+          <option value="accountant">Бухгалтер</option>
+          <option value="viewer">Viewer</option>
+        </select></label>
+        <label>Статус<select id="editUserStatus">
+          <option value="active">Активний</option>
+          <option value="paused">Призупинений</option>
+        </select></label>
+      </div>
+      <menu>
+        <button type="button" class="btn soft" data-close>Скасувати</button>
+        <button class="btn primary">Зберегти</button>
+      </menu>
+    </form>
+  </dialog>
+
   <dialog id="serviceDetailDialog" class="modal wide-modal">
     <div class="detail-shell">
       <div class="modal-head">
@@ -459,6 +483,6 @@
   </dialog>
 
   <div id="toast" class="toast"></div>
-  <script src="app.js"></script>
+  <script src="app.js?v=20260709-roles"></script>
 </body>
 </html>
